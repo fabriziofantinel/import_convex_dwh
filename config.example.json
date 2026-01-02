@@ -1,0 +1,35 @@
+{
+  "convex_apps": {
+    "my-app": {
+      "deploy_key": "preview:team-name:project-name|your-deploy-key-here",
+      "tables": ["users", "orders", "products"],
+      "table_mapping": {
+        "users": "convex_users",
+        "orders": "convex_orders",
+        "products": "convex_products"
+      }
+    },
+    "another-app": {
+      "deploy_key": "preview:team-name:another-project|your-deploy-key-here",
+      "tables": null,
+      "table_mapping": null
+    }
+  },
+  "sql_server": {
+    "connection_string": "Driver={ODBC Driver 17 for SQL Server};Server=myserver;Database=DWH;UID=user;PWD=password;",
+    "schema": "convex_data",
+    "timeout": 30
+  },
+  "email": {
+    "smtp_host": "smtp.gmail.com",
+    "smtp_port": 587,
+    "smtp_user": "notifications@example.com",
+    "smtp_password": "your-password",
+    "from_email": "notifications@example.com",
+    "to_emails": ["admin@example.com"],
+    "use_tls": true
+  },
+  "log_dir": "logs",
+  "retry_attempts": 3,
+  "retry_backoff": 2.0
+}

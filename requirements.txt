@@ -1,0 +1,14 @@
+# Core dependencies
+requests>=2.31.0
+pyodbc>=5.0.0
+python-dotenv>=1.0.0
+
+# Webhook server dependencies
+flask>=3.0.0
+flask-cors>=4.0.0
+jinja2>=3.1.0
+
+# Testing dependencies
+hypothesis>=6.92.0
+pytest>=7.4.0
+pytest-cov>=4.1.0

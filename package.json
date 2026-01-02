@@ -1,0 +1,9 @@
+{
+  "name": "convex-to-sqlserver-sync",
+  "version": "1.0.0",
+  "description": "Script per sincronizzare dati da Convex a SQL Server",
+  "private": true,
+  "dependencies": {
+    "convex": "^1.31.2"
+  }
+}
