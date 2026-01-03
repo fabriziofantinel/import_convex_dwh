@@ -1,0 +1,45 @@
+{
+  "name": "dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "biome check",
+    "format": "biome format --write",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "convex:dev": "convex dev",
+    "convex:deploy": "convex deploy",
+    "deploy:convex": "convex deploy --prod",
+    "deploy:vercel": "vercel --prod",
+    "deploy": "npm run deploy:convex && npm run deploy:vercel",
+    "env:setup": "node scripts/setup-vercel-env.js"
+  },
+  "dependencies": {
+    "@auth0/auth0-react": "^2.11.0",
+    "convex": "^1.31.2",
+    "isomorphic-dompurify": "^2.34.0",
+    "next": "16.1.1",
+    "node-cron": "^3.0.3",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.2.0",
+    "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^20",
+    "@types/node-cron": "^3.0.11",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
