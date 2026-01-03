@@ -20,6 +20,9 @@ wheels/
 .installed.cfg
 *.egg
 
+# Exception: Don't ignore dashboard/lib (TypeScript/Next.js code)
+!dashboard/lib/
+
 # Virtual Environment
 venv/
 ENV/
