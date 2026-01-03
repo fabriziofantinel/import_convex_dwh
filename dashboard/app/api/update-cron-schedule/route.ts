@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFileSync, readFileSync } from 'fs';
-import { join } from 'path';
 
 // Helper function to convert Rome time to UTC
 function convertRomeToUTC(cronExpression: string): string {
@@ -30,44 +28,83 @@ function convertRomeToUTC(cronExpression: string): string {
   return `${minute} ${utcHour} ${day} ${month} ${weekday}`;
 }
 
-// Helper function to trigger Vercel deployment
-async function triggerVercelDeploy(): Promise<boolean> {
+// Helper function to update vercel.json via GitHub API
+async function updateVercelJsonViaGitHub(utcCronSchedule: string): Promise<boolean> {
   try {
-    const vercelToken = process.env.VERCEL_TOKEN;
-    const vercelProjectId = process.env.VERCEL_PROJECT_ID;
+    const githubToken = process.env.GITHUB_TOKEN;
+    const githubRepo = process.env.GITHUB_REPO; // format: "owner/repo"
     
-    if (!vercelToken || !vercelProjectId) {
-      console.error('Missing Vercel credentials');
+    if (!githubToken || !githubRepo) {
+      console.error('Missing GitHub credentials');
       return false;
     }
     
-    const response = await fetch(`https://api.vercel.com/v13/deployments`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${vercelToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name: vercelProjectId,
-        gitSource: {
-          type: 'github',
-          repoId: process.env.GITHUB_REPO_ID,
-          ref: 'main'
-        }
-      })
-    });
+    // Get current vercel.json from GitHub
+    const getFileResponse = await fetch(
+      `https://api.github.com/repos/${githubRepo}/contents/dashboard/vercel.json`,
+      {
+        headers: {
+          'Authorization': `Bearer ${githubToken}`,
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      }
+    );
     
-    if (!response.ok) {
-      console.error('Failed to trigger Vercel deployment:', await response.text());
+    if (!getFileResponse.ok) {
+      console.error('Failed to get vercel.json from GitHub:', await getFileResponse.text());
       return false;
     }
     
-    const deployment = await response.json();
-    console.log('Vercel deployment triggered:', deployment.id);
+    const fileData = await getFileResponse.json();
+    const currentContent = JSON.parse(atob(fileData.content));
+    
+    // Update the cron schedule
+    const newCronJob = {
+      path: '/api/cron/check-scheduled-syncs',
+      schedule: utcCronSchedule
+    };
+    
+    const cronJobIndex = currentContent.crons?.findIndex(
+      (cron: any) => cron.path === '/api/cron/check-scheduled-syncs'
+    );
+    
+    if (cronJobIndex >= 0) {
+      currentContent.crons[cronJobIndex] = newCronJob;
+    } else {
+      if (!currentContent.crons) {
+        currentContent.crons = [];
+      }
+      currentContent.crons.push(newCronJob);
+    }
+    
+    // Update file on GitHub
+    const updateResponse = await fetch(
+      `https://api.github.com/repos/${githubRepo}/contents/dashboard/vercel.json`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${githubToken}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: `Update cron schedule to ${utcCronSchedule} (${new Date().toISOString()})`,
+          content: btoa(JSON.stringify(currentContent, null, 2)),
+          sha: fileData.sha,
+        }),
+      }
+    );
+    
+    if (!updateResponse.ok) {
+      console.error('Failed to update vercel.json on GitHub:', await updateResponse.text());
+      return false;
+    }
+    
+    console.log('Successfully updated vercel.json on GitHub');
     return true;
     
   } catch (error) {
-    console.error('Error triggering Vercel deployment:', error);
+    console.error('Error updating vercel.json via GitHub:', error);
     return false;
   }
 }
@@ -84,56 +121,17 @@ export async function POST(request: NextRequest) {
     const utcCronSchedule = convertRomeToUTC(cron_schedule);
     console.log(`Converting Rome time ${cron_schedule} to UTC ${utcCronSchedule}`);
     
-    // Read current vercel.json
-    const vercelJsonPath = join(process.cwd(), 'vercel.json');
-    let vercelConfig;
-    
-    try {
-      const vercelJsonContent = readFileSync(vercelJsonPath, 'utf8');
-      vercelConfig = JSON.parse(vercelJsonContent);
-    } catch (error) {
-      // Create default config if file doesn't exist
-      vercelConfig = {
-        crons: []
-      };
-    }
-    
-    // Update or add the cron job
-    const cronJobIndex = vercelConfig.crons?.findIndex(
-      (cron: any) => cron.path === '/api/cron/check-scheduled-syncs'
-    );
-    
-    const newCronJob = {
-      path: '/api/cron/check-scheduled-syncs',
-      schedule: utcCronSchedule
-    };
-    
-    if (cronJobIndex >= 0) {
-      // Update existing cron job
-      vercelConfig.crons[cronJobIndex] = newCronJob;
-    } else {
-      // Add new cron job
-      if (!vercelConfig.crons) {
-        vercelConfig.crons = [];
-      }
-      vercelConfig.crons.push(newCronJob);
-    }
-    
-    // Write updated vercel.json
-    writeFileSync(vercelJsonPath, JSON.stringify(vercelConfig, null, 2));
-    console.log('Updated vercel.json with new cron schedule:', utcCronSchedule);
-    
-    // Trigger Vercel deployment to apply the new cron schedule
-    const deploymentTriggered = await triggerVercelDeploy();
+    // Update vercel.json via GitHub API
+    const githubUpdateSuccess = await updateVercelJsonViaGitHub(utcCronSchedule);
     
     return NextResponse.json({
-      success: true,
+      success: githubUpdateSuccess,
       rome_schedule: cron_schedule,
       utc_schedule: utcCronSchedule,
-      deployment_triggered: deploymentTriggered,
-      message: deploymentTriggered 
-        ? 'Cron schedule updated and deployment triggered'
-        : 'Cron schedule updated but deployment failed - manual redeploy required'
+      github_updated: githubUpdateSuccess,
+      message: githubUpdateSuccess 
+        ? 'Cron schedule updated on GitHub - Vercel will auto-deploy'
+        : 'Failed to update GitHub - manual update required'
     });
     
   } catch (error) {

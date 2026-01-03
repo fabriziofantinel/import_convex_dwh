@@ -72,10 +72,10 @@ export default function SchedulingPage() {
           const result = await response.json();
           
           if (result.success) {
-            if (result.deployment_triggered) {
-              alert(`Schedulazione aggiornata con successo!\n\nOrario Roma: ${result.rome_schedule}\nOrario UTC: ${result.utc_schedule}\n\nIl deployment di Vercel è stato avviato automaticamente.`);
+            if (result.github_updated) {
+              alert(`Schedulazione aggiornata con successo!\n\nOrario Roma: ${result.rome_schedule}\nOrario UTC: ${result.utc_schedule}\n\nIl file vercel.json è stato aggiornato su GitHub.\nVercel farà il deployment automaticamente.`);
             } else {
-              alert(`Schedulazione aggiornata!\n\nOrario Roma: ${result.rome_schedule}\nOrario UTC: ${result.utc_schedule}\n\nATTENZIONE: È necessario fare un deployment manuale su Vercel per applicare le modifiche.`);
+              alert(`Schedulazione aggiornata!\n\nOrario Roma: ${result.rome_schedule}\nOrario UTC: ${result.utc_schedule}\n\nATTENZIONE: Errore nell'aggiornamento automatico.\nÈ necessario aggiornare manualmente il vercel.json.`);
             }
           } else {
             console.error('Failed to update Vercel cron:', result.error);

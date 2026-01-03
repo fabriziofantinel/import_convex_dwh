@@ -8,40 +8,42 @@ Questa funzionalità permette di aggiornare automaticamente il cron job di Verce
 
 1. **Inserisci l'orario in fuso orario di Roma** nella pagina Scheduling
 2. **Il sistema converte automaticamente** l'orario da Roma (CET/CEST) a UTC
-3. **Aggiorna il file `vercel.json`** con il nuovo cron schedule
-4. **Triggera automaticamente** un nuovo deployment di Vercel
+3. **Aggiorna il file `vercel.json`** nel repository GitHub via API
+4. **Vercel rileva il cambiamento** e fa deployment automatico
 5. **Il nuovo cron job** diventa attivo dopo il deployment
 
 ## Configurazione Richiesta
 
-### 1. Token API Vercel
+### 1. GitHub Personal Access Token
 
-Vai su [Vercel Account Tokens](https://vercel.com/account/tokens) e crea un nuovo token:
+Vai su [GitHub Settings → Tokens](https://github.com/settings/tokens) e crea un nuovo token:
 
-1. Clicca "Create Token"
-2. Nome: `Dynamic Cron Updates`
-3. Scope: `Full Account`
-4. Expiration: `No Expiration` (o come preferisci)
-5. Copia il token generato
+1. Clicca **"Generate new token"** → **"Generate new token (classic)"**
+2. **Nome:** `Vercel Cron Updates`
+3. **Scopes:** Seleziona **"repo"** (Full control of private repositories)
+4. **Expiration:** Imposta come preferisci (es: 1 anno)
+5. Clicca **"Generate token"**
+6. **IMPORTANTE:** Copia subito il token (non lo vedrai più!)
 
-### 2. Project ID Vercel
+### 2. Repository Information
 
-1. Vai al tuo progetto su Vercel
-2. Vai in Settings → General
-3. Copia il "Project ID"
+Il nome del repository nel formato `owner/repo`:
+- **Esempio:** `fabriziofantinel/import_convex_dwh`
+- **Formato:** `your_username/your_repo_name`
 
 ### 3. Configurazione Variabili d'Ambiente
 
 Aggiungi queste variabili d'ambiente su Vercel:
 
 ```bash
-VERCEL_TOKEN=your_vercel_token_here
-VERCEL_PROJECT_ID=your_project_id_here
+GITHUB_TOKEN=your_github_token_here
+GITHUB_REPO=your_username/your_repo_name
 ```
 
-**Opzionale (per deployment GitHub):**
+**Esempio:**
 ```bash
-GITHUB_REPO_ID=your_github_repo_id_here
+GITHUB_TOKEN=ghp_1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r
+GITHUB_REPO=fabriziofantinel/import_convex_dwh
 ```
 
 ## Utilizzo
@@ -59,8 +61,8 @@ GITHUB_REPO_ID=your_github_repo_id_here
 
 1. ✅ **Salvataggio** della schedulazione nel database Convex
 2. ✅ **Conversione** dell'orario da Roma a UTC
-3. ✅ **Aggiornamento** del file `vercel.json`
-4. ✅ **Trigger** del deployment Vercel
+3. ✅ **Aggiornamento** del file `vercel.json` su GitHub
+4. ✅ **Deployment automatico** di Vercel (rileva il cambiamento)
 5. ✅ **Attivazione** del nuovo cron job
 
 ### Messaggi di Conferma
@@ -72,7 +74,8 @@ Schedulazione aggiornata con successo!
 Orario Roma: 31 23 * * *
 Orario UTC: 31 22 * * *
 
-Il deployment di Vercel è stato avviato automaticamente.
+Il file vercel.json è stato aggiornato su GitHub.
+Vercel farà il deployment automaticamente.
 ```
 
 **Successo Parziale:**
@@ -82,7 +85,8 @@ Schedulazione aggiornata!
 Orario Roma: 31 23 * * *
 Orario UTC: 31 22 * * *
 
-ATTENZIONE: È necessario fare un deployment manuale su Vercel per applicare le modifiche.
+ATTENZIONE: Errore nell'aggiornamento automatico.
+È necessario aggiornare manualmente il vercel.json.
 ```
 
 ## Conversione Fuso Orario
@@ -105,17 +109,18 @@ ATTENZIONE: È necessario fare un deployment manuale su Vercel per applicare le 
 
 ## Troubleshooting
 
-### Deployment Non Triggera
+### Deployment Non Funziona
 
 **Possibili Cause:**
-- Token Vercel non configurato o scaduto
-- Project ID errato
-- Permessi insufficienti del token
+- Token GitHub non configurato o scaduto
+- Repository name errato (deve essere `owner/repo`)
+- Permessi insufficienti del token (serve scope `repo`)
 
 **Soluzione:**
 1. Verifica le variabili d'ambiente su Vercel
-2. Rigenera il token API se necessario
-3. Fai un deployment manuale come fallback
+2. Rigenera il token GitHub se necessario
+3. Controlla che il formato repository sia corretto
+4. Fai un deployment manuale come fallback
 
 ### Orario Sbagliato
 
@@ -152,18 +157,19 @@ ATTENZIONE: È necessario fare un deployment manuale su Vercel per applicare le 
 
 ## File Coinvolti
 
-- `dashboard/app/api/update-cron-schedule/route.ts` - API per aggiornamento cron
+- `dashboard/app/api/update-cron-schedule/route.ts` - API per aggiornamento cron via GitHub
 - `dashboard/app/scheduling/page.tsx` - Interfaccia utente
-- `dashboard/vercel.json` - Configurazione cron Vercel
+- `dashboard/vercel.json` - Configurazione cron Vercel (aggiornato via GitHub)
 - `dashboard/.env.vercel.example` - Esempio variabili d'ambiente
 
 ## Sicurezza
 
-- 🔒 Token Vercel mantenuto come variabile d'ambiente
+- 🔒 Token GitHub mantenuto come variabile d'ambiente
 - 🔒 Validazione input cron schedule
-- 🔒 Gestione errori per deployment falliti
+- 🔒 Gestione errori per aggiornamenti falliti
 - 🔒 Log dettagliati per debugging
+- 🔒 Accesso limitato al solo file vercel.json
 
 ---
 
-**Nota:** Questa funzionalità richiede i permessi API di Vercel. Se non configurata, l'aggiornamento della schedulazione funzionerà comunque nell'app, ma sarà necessario un deployment manuale per applicare le modifiche al cron job.
+**Nota:** Questa funzionalità richiede un GitHub Personal Access Token con scope `repo`. Se non configurata, l'aggiornamento della schedulazione funzionerà comunque nell'app, ma sarà necessario un aggiornamento manuale del file `vercel.json` e deployment.
