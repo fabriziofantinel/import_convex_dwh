@@ -13,19 +13,48 @@ function shouldRunNow(cronExpression: string, lastRunTime?: number): boolean {
       return false;
     }
 
-    // For this implementation, we'll use a simple approach:
-    // If no last run time, or if it's been more than the minimum interval, allow run
-    const now = Date.now();
-    const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
     
-    // If no last run, allow it
-    if (!lastRunTime) {
-      return true;
+    // Parse cron expression (minute hour day month weekday)
+    const cronParts = cronExpression.split(' ');
+    if (cronParts.length !== 5) {
+      console.error('Invalid cron format:', cronExpression);
+      return false;
     }
     
-    // If last run was more than 5 minutes ago, allow it
-    // This prevents duplicate runs within the 5-minute cron interval
-    return (now - lastRunTime) >= fiveMinutes;
+    const [minute, hour] = cronParts;
+    
+    // Check if current time matches the cron schedule
+    const cronHour = parseInt(hour);
+    const cronMinute = parseInt(minute);
+    
+    // Allow a 5-minute window for execution (in case cron is slightly delayed)
+    const timeDiff = Math.abs((currentHour * 60 + currentMinute) - (cronHour * 60 + cronMinute));
+    const withinWindow = timeDiff <= 5;
+    
+    if (!withinWindow) {
+      return false;
+    }
+    
+    // If within time window, check if we already ran today
+    if (lastRunTime) {
+      const lastRun = new Date(lastRunTime);
+      const today = new Date();
+      
+      // Check if last run was today
+      const sameDay = lastRun.getDate() === today.getDate() && 
+                     lastRun.getMonth() === today.getMonth() && 
+                     lastRun.getFullYear() === today.getFullYear();
+      
+      if (sameDay) {
+        console.log(`Already ran today for cron ${cronExpression}`);
+        return false;
+      }
+    }
+    
+    return true;
     
   } catch (error) {
     console.error('Error checking cron expression:', cronExpression, error);
