@@ -121,6 +121,22 @@ export async function POST(request: NextRequest) {
     const utcCronSchedule = convertRomeToUTC(cron_schedule);
     console.log(`Converting Rome time ${cron_schedule} to UTC ${utcCronSchedule}`);
     
+    // Check if GitHub credentials are configured
+    const githubToken = process.env.GITHUB_TOKEN;
+    const githubRepo = process.env.GITHUB_REPO;
+    
+    if (!githubToken || !githubRepo) {
+      console.log('GitHub credentials not configured - skipping automatic update');
+      return NextResponse.json({
+        success: false,
+        rome_schedule: cron_schedule,
+        utc_schedule: utcCronSchedule,
+        github_updated: false,
+        error: 'GitHub credentials not configured',
+        message: 'Schedulazione salvata. Configurare GITHUB_TOKEN e GITHUB_REPO per aggiornamento automatico.'
+      });
+    }
+    
     // Update vercel.json via GitHub API
     const githubUpdateSuccess = await updateVercelJsonViaGitHub(utcCronSchedule);
     

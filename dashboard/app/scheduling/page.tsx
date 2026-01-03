@@ -78,6 +78,14 @@ export default function SchedulingPage() {
               alert(`Schedulazione aggiornata!\n\nOrario Roma: ${result.rome_schedule}\nOrario UTC: ${result.utc_schedule}\n\nATTENZIONE: Errore nell'aggiornamento automatico.\nÈ necessario aggiornare manualmente il vercel.json.`);
             }
           } else {
+            // Handle specific error cases
+            if (result.error === 'GitHub credentials not configured') {
+              alert(`Schedulazione salvata nell'app!\n\nOrario Roma: ${result.rome_schedule}\nOrario UTC: ${result.utc_schedule}\n\nPer l'aggiornamento automatico del cron job:\n1. Configura GITHUB_TOKEN su Vercel\n2. Configura GITHUB_REPO su Vercel\n\nOppure aggiorna manualmente il vercel.json e fai deployment.`);
+            } else {
+              console.error('Failed to update Vercel cron:', result.error);
+              alert("Schedulazione salvata nell'app, ma errore nell'aggiornamento del cron job di Vercel. Potrebbe essere necessario un deployment manuale.");
+            }
+          }
             console.error('Failed to update Vercel cron:', result.error);
             alert("Schedulazione salvata nell'app, ma errore nell'aggiornamento del cron job di Vercel. Potrebbe essere necessario un deployment manuale.");
           }
