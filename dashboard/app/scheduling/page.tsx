@@ -49,11 +49,43 @@ export default function SchedulingPage() {
 
     setIsUpdating(true);
     try {
+      // Update the app schedule in Convex
       await updateApp({
         id: appId as Id<"sync_apps">,
         cron_schedule: scheduleForm.cron_schedule.trim(),
         cron_enabled: scheduleForm.cron_enabled,
       });
+      
+      // If scheduling is enabled, update Vercel cron job
+      if (scheduleForm.cron_enabled) {
+        try {
+          const response = await fetch('/api/update-cron-schedule', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              cron_schedule: scheduleForm.cron_schedule.trim()
+            })
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            if (result.deployment_triggered) {
+              alert(`Schedulazione aggiornata con successo!\n\nOrario Roma: ${result.rome_schedule}\nOrario UTC: ${result.utc_schedule}\n\nIl deployment di Vercel è stato avviato automaticamente.`);
+            } else {
+              alert(`Schedulazione aggiornata!\n\nOrario Roma: ${result.rome_schedule}\nOrario UTC: ${result.utc_schedule}\n\nATTENZIONE: È necessario fare un deployment manuale su Vercel per applicare le modifiche.`);
+            }
+          } else {
+            console.error('Failed to update Vercel cron:', result.error);
+            alert("Schedulazione salvata nell'app, ma errore nell'aggiornamento del cron job di Vercel. Potrebbe essere necessario un deployment manuale.");
+          }
+        } catch (cronError) {
+          console.error('Error updating Vercel cron:', cronError);
+          alert("Schedulazione salvata nell'app, ma errore nell'aggiornamento del cron job di Vercel. Potrebbe essere necessario un deployment manuale.");
+        }
+      }
       
       setEditingApp(null);
       setScheduleForm({
@@ -78,38 +110,36 @@ export default function SchedulingPage() {
       const hour = cronParts[1];
       
       if (minute !== '*' && hour !== '*') {
-        // Convert UTC to Rome time (UTC+1 in winter, UTC+2 in summer)
-        const utcHour = parseInt(hour);
-        const utcMinute = parseInt(minute);
+        // The cron schedule is stored in Rome time, so display it directly
+        const romeHour = parseInt(hour);
+        const romeMinute = parseInt(minute);
         
-        // For simplicity, assume UTC+1 (winter time)
-        // In production, you'd want to handle DST properly
-        const romeHour = (utcHour + 1) % 24;
-        
-        return `Daily at ${romeHour.toString().padStart(2, '0')}:${utcMinute.toString().padStart(2, '0')} (Rome time)`;
+        return `Daily at ${romeHour.toString().padStart(2, '0')}:${romeMinute.toString().padStart(2, '0')} (Rome time)`;
       }
     }
     
-    // Common cron patterns with Rome time conversion
+    // Common cron patterns with Rome time (stored as Rome time, not UTC)
     const patterns: Record<string, string> = {
-      "15 23 * * *": "Daily at 00:15 (Rome time)",
-      "0 1 * * *": "Daily at 02:00 (Rome time)", 
-      "0 5 * * *": "Every 6 hours (06:00 Rome time)",
-      "0 11 * * *": "Every 12 hours (12:00 Rome time)",
-      "15 22 * * 0": "Weekly on Sunday at 23:15 (Rome time)",
-      "15 22 1 * *": "Monthly on the 1st at 23:15 (Rome time)",
+      "15 0 * * *": "Daily at 00:15 (Rome time)",
+      "0 2 * * *": "Daily at 02:00 (Rome time)", 
+      "0 6 * * *": "Daily at 06:00 (Rome time)",
+      "0 12 * * *": "Daily at 12:00 (Rome time)",
+      "31 23 * * *": "Daily at 23:31 (Rome time)",
+      "15 23 * * 0": "Weekly on Sunday at 23:15 (Rome time)",
+      "15 23 1 * *": "Monthly on the 1st at 23:15 (Rome time)",
     };
     
-    return patterns[cronSchedule] || `${cronSchedule} (UTC)`;
+    return patterns[cronSchedule] || `${cronSchedule} (Rome time)`;
   };
 
   const cronPresets = [
-    { label: "Daily at 00:15 (Rome)", value: "15 23 * * *" },
-    { label: "Daily at 02:00 (Rome)", value: "0 1 * * *" },
-    { label: "Daily at 06:00 (Rome)", value: "0 5 * * *" },
-    { label: "Daily at 12:00 (Rome)", value: "0 11 * * *" },
-    { label: "Weekly Sunday 23:15 (Rome)", value: "15 22 * * 0" },
-    { label: "Monthly 1st 23:15 (Rome)", value: "15 22 1 * *" },
+    { label: "Daily at 00:15 (Rome)", value: "15 0 * * *" },
+    { label: "Daily at 02:00 (Rome)", value: "0 2 * * *" },
+    { label: "Daily at 06:00 (Rome)", value: "0 6 * * *" },
+    { label: "Daily at 12:00 (Rome)", value: "0 12 * * *" },
+    { label: "Daily at 23:31 (Rome)", value: "31 23 * * *" },
+    { label: "Weekly Sunday 23:15 (Rome)", value: "15 23 * * 0" },
+    { label: "Monthly 1st 23:15 (Rome)", value: "15 23 1 * *" },
   ];
 
   return (
@@ -348,29 +378,36 @@ export default function SchedulingPage() {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Formato Cron (UTC)</h4>
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Formato Cron (Orario Roma)</h4>
               <code className="text-sm bg-white px-2 py-1 rounded border">
                 minute hour day month weekday
               </code>
               <p className="text-sm text-gray-600 mt-2">
-                Gli orari sono automaticamente convertiti da Roma (CET/CEST) a UTC per Vercel.
+                Inserisci l'orario desiderato in fuso orario di Roma. Il sistema convertirà automaticamente in UTC per Vercel.
               </p>
             </div>
             <div>
               <h4 className="text-sm font-medium text-gray-700 mb-2">Esempi (Orario Roma)</h4>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li><code>15 23 * * *</code> - Giornaliero alle 00:15</li>
-                <li><code>0 1 * * *</code> - Giornaliero alle 02:00</li>
-                <li><code>0 5 * * *</code> - Giornaliero alle 06:00</li>
-                <li><code>15 22 * * 0</code> - Domenica alle 23:15</li>
+                <li><code>15 0 * * *</code> - Giornaliero alle 00:15</li>
+                <li><code>0 2 * * *</code> - Giornaliero alle 02:00</li>
+                <li><code>0 6 * * *</code> - Giornaliero alle 06:00</li>
+                <li><code>31 23 * * *</code> - Giornaliero alle 23:31</li>
               </ul>
             </div>
           </div>
+          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+            <p className="text-sm text-green-800">
+              <strong>Aggiornamento Automatico:</strong> Quando salvi una nuova schedulazione, 
+              il sistema aggiorna automaticamente il cron job di Vercel e triggera un nuovo deployment 
+              per applicare le modifiche.
+            </p>
+          </div>
           <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
             <p className="text-sm text-yellow-800">
-              <strong>Nota:</strong> Durante l'ora legale (CEST), Roma è UTC+2. 
-              Il sistema attualmente usa UTC+1 (ora solare). Per l'ora legale, 
-              sottrai 2 ore invece di 1 dall'orario desiderato.
+              <strong>Nota Ora Legale:</strong> Durante l'ora legale (CEST), Roma è UTC+2. 
+              Il sistema attualmente usa UTC+1 (ora solare). Durante l'ora legale, 
+              la conversione potrebbe avere 1 ora di differenza.
             </p>
           </div>
         </div>
