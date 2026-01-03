@@ -66,6 +66,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Exception: Don't ignore dashboard/app/logs (Next.js route)
+!dashboard/app/logs/
+
 # Configuration (mantieni solo example)
 config.json
 .env

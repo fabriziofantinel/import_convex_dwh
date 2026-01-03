@@ -258,10 +258,10 @@ export const getAllSyncJobs = query({
     
     // Get jobs based on whether app filter is provided
     let jobs;
-    if (args.app_id) {
+    if (args.app_id !== undefined) {
       jobs = await ctx.db
         .query("sync_jobs")
-        .withIndex("by_app_and_started", (q) => q.eq("app_id", args.app_id))
+        .withIndex("by_app_and_started", (q) => q.eq("app_id", args.app_id!))
         .order("desc")
         .take(limit * 2);
     } else {
