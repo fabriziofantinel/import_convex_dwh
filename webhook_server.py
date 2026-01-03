@@ -29,7 +29,17 @@ from audit_logger import init_audit_logger, get_audit_logger
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for dashboard requests
+# Configure CORS with specific settings for Vercel
+CORS(app, 
+     origins=[
+         'https://import-convex-dwh.vercel.app',
+         'http://localhost:3000',
+         'https://*.vercel.app'
+     ],
+     methods=['GET', 'POST', 'OPTIONS'],
+     allow_headers=['Content-Type', 'Authorization'],
+     supports_credentials=True
+)
 
 # Configuration from environment variables
 WEBHOOK_TOKEN = os.getenv('WEBHOOK_TOKEN', 'change-this-secret-token')
@@ -387,6 +397,28 @@ def run_sync_async(job_id, app_name, deploy_key, tables, table_mapping):
             if app_name in running_syncs:
                 del running_syncs[app_name]
         print(f"[{app_name}] Sync job {job_id} finished")
+
+
+@app.after_request
+def after_request(response):
+    """Add CORS headers to all responses"""
+    response.headers.add('Access-Control-Allow-Origin', 'https://import-convex-dwh.vercel.app')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
+
+
+@app.before_request
+def handle_preflight():
+    """Handle CORS preflight requests"""
+    if request.method == "OPTIONS":
+        response = jsonify({'status': 'ok'})
+        response.headers.add("Access-Control-Allow-Origin", "https://import-convex-dwh.vercel.app")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
+        response.headers.add('Access-Control-Allow-Methods', "GET,POST,OPTIONS")
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        return response
 
 
 @app.route('/health', methods=['GET'])

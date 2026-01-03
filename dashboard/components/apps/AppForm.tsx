@@ -91,12 +91,13 @@ export function AppForm({
     setFetchError(null);
 
     try {
-      // Call webhook server directly from frontend
-      const response = await fetch("http://localhost:5000/api/fetch-tables", {
+      // Call webhook server via ngrok URL
+      const webhookUrl = process.env.NEXT_PUBLIC_WEBHOOK_URL || "http://localhost:5000";
+      const response = await fetch(`${webhookUrl}/api/fetch-tables`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer test-token-12345",
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_WEBHOOK_TOKEN || "test-token-12345"}`,
         },
         body: JSON.stringify({
           deploy_key: deployKey,

@@ -15,31 +15,37 @@ import { api } from "@/convex/_generated/api";
 
 export default function AllLogsPage() {
   const apps = useQuery(api.queries.listSyncApps);
-  const allJobs = useQuery(api.queries.getAllSyncJobs, { limit: 100 });
-
+  
   const [selectedAppId, setSelectedAppId] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [dateRange, setDateRange] = useState<string>("7"); // days
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [isLogViewerOpen, setIsLogViewerOpen] = useState(false);
 
-  // Filter jobs based on selected filters
-  const filteredJobs = useMemo(() => {
-    if (!allJobs) return [];
-
-    let filtered = [...allJobs];
-
-    // Filter by app
-    if (selectedAppId !== "all") {
-      filtered = filtered.filter((job) => job.app_id === selectedAppId);
+  // Calculate date range for query
+  const { from_date, to_date } = useMemo(() => {
+    if (dateRange === "all") {
+      return { from_date: undefined, to_date: undefined };
     }
+    
+    const days = parseInt(dateRange);
+    const now = Date.now();
+    const from = now - (days * 24 * 60 * 60 * 1000);
+    
+    return {
+      from_date: from,
+      to_date: now
+    };
+  }, [dateRange]);
 
-    // Filter by status
-    if (selectedStatus !== "all") {
-      filtered = filtered.filter((job) => job.status === selectedStatus);
-    }
-
-    return filtered;
-  }, [allJobs, selectedAppId, selectedStatus]);
+  // Query with filters
+  const allJobs = useQuery(api.queries.getAllSyncJobs, { 
+    limit: 100,
+    app_id: selectedAppId !== "all" ? selectedAppId as any : undefined,
+    status: selectedStatus !== "all" ? selectedStatus as any : undefined,
+    from_date,
+    to_date
+  });
 
   const handleViewLog = (job: any) => {
     setSelectedJob(job);
@@ -77,7 +83,7 @@ export default function AllLogsPage() {
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* App Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -114,11 +120,29 @@ export default function AllLogsPage() {
                 <option value="pending">Pending</option>
               </select>
             </div>
+
+            {/* Date Range Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Time Period
+              </label>
+              <select
+                value={dateRange}
+                onChange={(e) => setDateRange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="1">Last 24 hours</option>
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+                <option value="90">Last 90 days</option>
+                <option value="all">All time</option>
+              </select>
+            </div>
           </div>
 
           {/* Results Count */}
           <div className="mt-4 text-sm text-gray-600">
-            Showing {filteredJobs.length} of {allJobs?.length ?? 0} sync jobs
+            Showing {allJobs?.length ?? 0} sync jobs
           </div>
         </div>
 
@@ -153,7 +177,7 @@ export default function AllLogsPage() {
         {/* Jobs Table */}
         {apps !== undefined && allJobs !== undefined && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            {filteredJobs.length === 0 ? (
+            {allJobs.length === 0 ? (
               <div className="text-center py-12">
                 <svg
                   className="mx-auto h-12 w-12 text-gray-400"
@@ -204,7 +228,7 @@ export default function AllLogsPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredJobs.map((job) => (
+                    {allJobs.map((job) => (
                       <tr key={job._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {job.app_name}

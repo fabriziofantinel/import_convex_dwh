@@ -252,6 +252,8 @@ export const getAllSyncJobs = query({
     app_id: v.optional(v.id("sync_apps")),
     status: v.optional(v.union(v.literal("success"), v.literal("failed"), v.literal("running"), v.literal("pending"))),
     limit: v.optional(v.number()),
+    from_date: v.optional(v.number()), // timestamp in milliseconds
+    to_date: v.optional(v.number()),   // timestamp in milliseconds
   },
   handler: async (ctx, args) => {
     const limit = args.limit ?? 50;
@@ -269,6 +271,19 @@ export const getAllSyncJobs = query({
         .query("sync_jobs")
         .order("desc")
         .take(limit * 2);
+    }
+    
+    // Apply date range filter if provided
+    if (args.from_date || args.to_date) {
+      jobs = jobs.filter(job => {
+        const jobDate = job.started_at;
+        if (!jobDate) return false;
+        
+        if (args.from_date && jobDate < args.from_date) return false;
+        if (args.to_date && jobDate > args.to_date) return false;
+        
+        return true;
+      });
     }
     
     // Apply status filter if provided
