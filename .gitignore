@@ -41,7 +41,7 @@ dashboard/.cache/
 # Convex
 .convex/
 dashboard/.convex/
-dashboard/convex/_generated/
+# dashboard/convex/_generated/ - Commented out to allow Vercel builds
 
 # Testing
 .pytest_cache/
