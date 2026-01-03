@@ -256,14 +256,20 @@ export const getAllSyncJobs = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? 50;
     
-    let jobsQuery = ctx.db.query("sync_jobs");
-    
-    // Apply app filter if provided
+    // Get jobs based on whether app filter is provided
+    let jobs;
     if (args.app_id) {
-      jobsQuery = jobsQuery.withIndex("by_app_and_started", (q) => q.eq("app_id", args.app_id));
+      jobs = await ctx.db
+        .query("sync_jobs")
+        .withIndex("by_app_and_started", (q) => q.eq("app_id", args.app_id))
+        .order("desc")
+        .take(limit * 2);
+    } else {
+      jobs = await ctx.db
+        .query("sync_jobs")
+        .order("desc")
+        .take(limit * 2);
     }
-    
-    let jobs = await jobsQuery.order("desc").take(limit * 2); // Get more to filter
     
     // Apply status filter if provided
     if (args.status) {
