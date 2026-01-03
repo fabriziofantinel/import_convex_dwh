@@ -242,3 +242,48 @@ export const getAuditLogStats = query({
     };
   },
 });
+
+/**
+ * Get all sync jobs with optional filters
+ * Requirements: 4.1, 4.3
+ */
+export const getAllSyncJobs = query({
+  args: {
+    app_id: v.optional(v.id("sync_apps")),
+    status: v.optional(v.union(v.literal("success"), v.literal("failed"), v.literal("running"), v.literal("pending"))),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 50;
+    
+    let jobsQuery = ctx.db.query("sync_jobs");
+    
+    // Apply app filter if provided
+    if (args.app_id) {
+      jobsQuery = jobsQuery.withIndex("by_app_and_started", (q) => q.eq("app_id", args.app_id));
+    }
+    
+    let jobs = await jobsQuery.order("desc").take(limit * 2); // Get more to filter
+    
+    // Apply status filter if provided
+    if (args.status) {
+      jobs = jobs.filter(job => job.status === args.status);
+    }
+    
+    // Limit results
+    jobs = jobs.slice(0, limit);
+    
+    // Get app names for each job
+    const jobsWithAppNames = await Promise.all(
+      jobs.map(async (job) => {
+        const app = await ctx.db.get(job.app_id);
+        return {
+          ...job,
+          app_name: app?.name ?? "Unknown",
+        };
+      })
+    );
+    
+    return jobsWithAppNames;
+  },
+});
