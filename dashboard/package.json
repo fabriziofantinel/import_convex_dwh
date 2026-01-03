@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run convex:codegen && next build",
+    "build:local": "next build",
     "start": "next start",
+    "convex:codegen": "convex codegen --typecheck disable",
     "lint": "biome check",
     "format": "biome format --write",
     "test": "jest",
