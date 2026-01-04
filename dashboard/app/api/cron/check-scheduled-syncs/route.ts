@@ -27,12 +27,20 @@ function shouldRunNow(cronExpression: string, lastRunTime?: number): boolean {
     const [minute, hour] = cronParts;
     
     // Check if current time matches the cron schedule
-    const cronHour = parseInt(hour);
-    const cronMinute = parseInt(minute);
+    // NOTE: Vercel cron runs in UTC, but app schedules are in Rome time
+    // Convert Rome time to UTC for comparison
+    const cronHourRome = parseInt(hour);
+    const cronMinuteRome = parseInt(minute);
     
-    // Allow a 5-minute window for execution (in case cron is slightly delayed)
-    const timeDiff = Math.abs((currentHour * 60 + currentMinute) - (cronHour * 60 + cronMinute));
-    const withinWindow = timeDiff <= 5;
+    // Convert Rome time to UTC (subtract 1 hour for CET)
+    let cronHourUTC = cronHourRome - 1;
+    if (cronHourUTC < 0) {
+      cronHourUTC = 24 + cronHourUTC;
+    }
+    
+    // Allow a 10-minute window for execution (Vercel free tier can be delayed)
+    const timeDiff = Math.abs((currentHour * 60 + currentMinute) - (cronHourUTC * 60 + cronMinuteRome));
+    const withinWindow = timeDiff <= 10;
     
     if (!withinWindow) {
       return false;
