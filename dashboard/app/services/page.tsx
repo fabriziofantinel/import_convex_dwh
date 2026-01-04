@@ -36,7 +36,7 @@ export default function ServicesPage() {
   const checkWebhookStatus = async () => {
     setIsCheckingWebhook(true);
     try {
-      const response = await fetch("http://localhost:5000/health", {
+      const response = await fetch("/api/check-webhook-status", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -47,8 +47,8 @@ export default function ServicesPage() {
         const data = await response.json();
         setWebhookStatus({
           name: "Webhook Server",
-          status: "running",
-          url: "http://localhost:5000",
+          status: data.status,
+          url: data.url,
           lastCheck: new Date().toLocaleTimeString(),
         });
       } else {
@@ -73,29 +73,18 @@ export default function ServicesPage() {
   const checkNgrokStatus = async () => {
     setIsCheckingNgrok(true);
     try {
-      // Ngrok exposes a local API at http://localhost:4040/api/tunnels
-      const response = await fetch("http://localhost:4040/api/tunnels", {
+      const response = await fetch("/api/check-ngrok-status", {
         method: "GET",
       });
 
       if (response.ok) {
         const data = await response.json();
-        const tunnel = data.tunnels?.find((t: any) => t.proto === "https");
-        
-        if (tunnel) {
-          setNgrokStatus({
-            name: "Ngrok Tunnel",
-            status: "running",
-            url: tunnel.public_url,
-            lastCheck: new Date().toLocaleTimeString(),
-          });
-        } else {
-          setNgrokStatus({
-            name: "Ngrok Tunnel",
-            status: "stopped",
-            lastCheck: new Date().toLocaleTimeString(),
-          });
-        }
+        setNgrokStatus({
+          name: "Ngrok Tunnel",
+          status: data.status,
+          url: data.url,
+          lastCheck: new Date().toLocaleTimeString(),
+        });
       } else {
         setNgrokStatus({
           name: "Ngrok Tunnel",
