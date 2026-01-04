@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/check-scheduled-syncs",
-      "schedule": "30 0 * * *"
+      "schedule": "42 0 * * *"
     }
   ]
 }
