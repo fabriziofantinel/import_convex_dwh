@@ -98,6 +98,7 @@ export function AppForm({
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${process.env.NEXT_PUBLIC_WEBHOOK_TOKEN || "test-token-12345"}`,
+          "ngrok-skip-browser-warning": "true",
         },
         body: JSON.stringify({
           deploy_key: deployKey,
