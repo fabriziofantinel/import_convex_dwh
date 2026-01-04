@@ -16,17 +16,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log(`[trigger-sync-by-name] Looking for app: ${app_name}`);
+
     // Step 1: Get app by name
     const app = await convex.query(api.queries.getSyncAppByName, {
       name: app_name,
     });
 
     if (!app) {
+      console.log(`[trigger-sync-by-name] App not found: ${app_name}`);
       return NextResponse.json(
         { error: `App '${app_name}' not found` },
         { status: 404 }
       );
     }
+
+    console.log(`[trigger-sync-by-name] App found: ${app._id}`);
 
     // Step 2: Prepare sync job
     const jobData = await convex.mutation(api.mutations.prepareSyncJob, {
@@ -34,10 +39,14 @@ export async function POST(request: NextRequest) {
       triggered_by: "manual",
     });
 
+    console.log(`[trigger-sync-by-name] Job created: ${jobData.job_id}`);
+
     // Step 3: Trigger webhook via proxy (same as Sync Now button)
     const baseUrl = process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
       : "http://localhost:3000";
+    
+    console.log(`[trigger-sync-by-name] Calling proxy at: ${baseUrl}/api/proxy-trigger-sync`);
     
     const webhookResponse = await fetch(
       `${baseUrl}/api/proxy-trigger-sync`,
@@ -58,10 +67,12 @@ export async function POST(request: NextRequest) {
 
     if (!webhookResponse.ok) {
       const errorText = await webhookResponse.text();
+      console.error(`[trigger-sync-by-name] Webhook failed: ${errorText}`);
       throw new Error(`Webhook request failed: ${errorText}`);
     }
 
     const webhookData = await webhookResponse.json();
+    console.log(`[trigger-sync-by-name] Success!`);
 
     return NextResponse.json({
       success: true,
@@ -70,7 +81,7 @@ export async function POST(request: NextRequest) {
       message: webhookData.message || `Sync started for ${jobData.app_name}`,
     });
   } catch (error) {
-    console.error("Error triggering sync:", error);
+    console.error("[trigger-sync-by-name] Error:", error);
     return NextResponse.json(
       {
         error:
