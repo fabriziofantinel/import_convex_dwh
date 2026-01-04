@@ -571,7 +571,7 @@ def get_app_config(app_name):
     
     try:
         # Try to get config from dashboard via HTTP request
-        dashboard_url = os.getenv('CONVEX_WEBHOOK_URL', 'http://localhost:3000')
+        dashboard_url = os.getenv('DASHBOARD_URL', 'http://localhost:3000')
         
         try:
             dashboard_request_url = f"{dashboard_url}/api/get-app-config/{app_name}"
