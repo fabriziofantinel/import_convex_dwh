@@ -260,7 +260,7 @@ export const getAllSyncJobs = query({
     
     // Take more records to ensure we have enough after filtering
     // If date range is specified, take up to 500 records to filter from
-    const takeLimit = (args.from_date || args.to_date) ? 500 : limit * 2;
+    const takeLimit = (args.from_date !== undefined || args.to_date !== undefined) ? 500 : limit * 2;
     
     // Get jobs based on whether app filter is provided
     let jobs;
@@ -278,20 +278,20 @@ export const getAllSyncJobs = query({
     }
     
     // Apply date range filter if provided
-    if (args.from_date || args.to_date) {
+    if (args.from_date !== undefined || args.to_date !== undefined) {
       jobs = jobs.filter(job => {
         const jobDate = job.started_at;
         if (!jobDate) return false;
         
-        if (args.from_date && jobDate < args.from_date) return false;
-        if (args.to_date && jobDate > args.to_date) return false;
+        if (args.from_date !== undefined && jobDate < args.from_date) return false;
+        if (args.to_date !== undefined && jobDate > args.to_date) return false;
         
         return true;
       });
     }
     
     // Apply status filter if provided
-    if (args.status) {
+    if (args.status !== undefined) {
       jobs = jobs.filter(job => job.status === args.status);
     }
     
