@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { LoadingButton, LoadingSpinner } from "@/components/ui";
+import { useState } from "react";
+import { LoadingButton } from "@/components/ui";
 import { useToastContext } from "@/components/providers/ToastProvider";
 import { validateSyncAppForm, ValidationError } from "@/lib/validation";
 
@@ -18,8 +18,6 @@ interface AppFormProps {
     deploy_key: string;
     tables: string[];
     table_mapping?: Record<string, string>;
-    cron_schedule?: string;
-    cron_enabled: boolean;
   };
   onSubmit: (data: {
     name: string;
@@ -27,8 +25,6 @@ interface AppFormProps {
     deploy_key: string;
     tables: string[];
     table_mapping?: Record<string, string>;
-    cron_schedule?: string;
-    cron_enabled: boolean;
   }) => Promise<void>;
   onCancel: () => void;
   isSubmitting?: boolean;
@@ -53,12 +49,6 @@ export function AppForm({
   );
   const [isFetchingTables, setIsFetchingTables] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [cronSchedule, setCronSchedule] = useState(
-    initialData?.cron_schedule || ""
-  );
-  const [cronEnabled, setCronEnabled] = useState(
-    initialData?.cron_enabled || false
-  );
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -78,7 +68,6 @@ export function AppForm({
       name: name,
       deploy_key: deployKey,
       tables: [],
-      cron_enabled: false,
     });
     
     const deployKeyErrors = validationResult.errors.filter(e => e.field === 'deploy_key');
@@ -164,8 +153,6 @@ export function AppForm({
       description,
       deploy_key: deployKey,
       tables,
-      cron_schedule: cronEnabled ? cronSchedule : undefined,
-      cron_enabled: cronEnabled,
     });
     
     if (!validationResult.isValid) {
@@ -189,8 +176,6 @@ export function AppForm({
       deploy_key: sanitizedData.deploy_key,
       tables: sanitizedData.tables,
       table_mapping: tableMapping,
-      cron_schedule: sanitizedData.cron_schedule,
-      cron_enabled: sanitizedData.cron_enabled,
     });
   };
 
@@ -387,65 +372,6 @@ export function AppForm({
           </div>
         </div>
       )}
-
-      {/* Cron Schedule */}
-      <div className="border-t border-gray-200 pt-6">
-        <div className="flex items-center gap-3 mb-4">
-          <input
-            type="checkbox"
-            id="cron_enabled"
-            checked={cronEnabled}
-            onChange={(e) => setCronEnabled(e.target.checked)}
-            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            disabled={isSubmitting}
-          />
-          <label
-            htmlFor="cron_enabled"
-            className="text-sm font-medium text-gray-700"
-          >
-            Enable Automatic Sync Schedule
-          </label>
-        </div>
-
-        {cronEnabled && (
-          <div>
-            <label
-              htmlFor="cron_schedule"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Cron Schedule <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="cron_schedule"
-              value={cronSchedule}
-              onChange={(e) => {
-                setCronSchedule(e.target.value);
-                setErrors((prev) => ({ ...prev, cron_schedule: "" }));
-              }}
-              className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm ${
-                errors.cron_schedule ? "border-red-500" : "border-gray-300"
-              }`}
-              placeholder="0 2 * * *"
-              disabled={isSubmitting}
-            />
-            {errors.cron_schedule && (
-              <p className="mt-1 text-sm text-red-600">{errors.cron_schedule}</p>
-            )}
-            <p className="mt-1 text-sm text-gray-500">
-              Cron expression (e.g., "0 2 * * *" for daily at 2:00 AM)
-            </p>
-            <div className="mt-2 p-3 bg-blue-50 rounded-md">
-              <p className="text-xs text-blue-700">
-                <strong>Examples:</strong>
-                <br />• "0 2 * * *" - Every day at 2:00 AM
-                <br />• "0 */6 * * *" - Every 6 hours
-                <br />• "0 0 * * 0" - Every Sunday at midnight
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">

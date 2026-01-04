@@ -12,8 +12,6 @@ export const createSyncApp = mutation({
     deploy_key: v.string(),
     tables: v.array(v.string()),
     table_mapping: v.optional(v.any()),
-    cron_schedule: v.optional(v.string()),
-    cron_enabled: v.boolean(),
     created_by: v.string(),
   },
   handler: async (ctx, args) => {
@@ -35,8 +33,6 @@ export const createSyncApp = mutation({
       deploy_key: args.deploy_key,
       tables: args.tables,
       table_mapping: args.table_mapping,
-      cron_schedule: args.cron_schedule,
-      cron_enabled: args.cron_enabled,
       created_at: now,
       updated_at: now,
       created_by: args.created_by,
@@ -56,8 +52,6 @@ export const updateSyncApp = mutation({
     deploy_key: v.optional(v.string()),
     tables: v.optional(v.array(v.string())),
     table_mapping: v.optional(v.any()),
-    cron_schedule: v.optional(v.string()),
-    cron_enabled: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;

@@ -28,8 +28,6 @@ export default function NewAppPage() {
     deploy_key: string;
     tables: string[];
     table_mapping?: Record<string, string>;
-    cron_schedule?: string;
-    cron_enabled: boolean;
   }) => {
     setIsSubmitting(true);
     setError(null);

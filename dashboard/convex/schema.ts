@@ -9,8 +9,6 @@ export default defineSchema({
     deploy_key: v.string(),
     tables: v.array(v.string()),
     table_mapping: v.optional(v.any()), // Record<string, string>
-    cron_schedule: v.optional(v.string()),
-    cron_enabled: v.boolean(),
     created_at: v.number(),
     updated_at: v.number(),
     created_by: v.string(), // Auth0 user ID

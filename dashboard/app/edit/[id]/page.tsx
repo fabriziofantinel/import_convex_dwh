@@ -31,8 +31,6 @@ export default function EditAppPage() {
     deploy_key: string;
     tables: string[];
     table_mapping?: Record<string, string>;
-    cron_schedule?: string;
-    cron_enabled: boolean;
   }) => {
     setIsSubmitting(true);
     setError(null);
@@ -186,8 +184,6 @@ export default function EditAppPage() {
                 deploy_key: app.deploy_key,
                 tables: app.tables,
                 table_mapping: app.table_mapping,
-                cron_schedule: app.cron_schedule,
-                cron_enabled: app.cron_enabled,
               }}
               onSubmit={handleSubmit}
               onCancel={handleCancel}
