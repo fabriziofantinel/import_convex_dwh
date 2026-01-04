@@ -41,19 +41,24 @@ export async function POST(request: NextRequest) {
 
     console.log(`[trigger-sync-by-name] Job created: ${jobData.job_id}`);
 
-    // Step 3: Trigger webhook via proxy (same as Sync Now button)
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
+    // Step 3: Trigger webhook server directly
+    const webhookUrl = process.env.NEXT_PUBLIC_WEBHOOK_URL;
+    if (!webhookUrl) {
+      console.error(`[trigger-sync-by-name] NEXT_PUBLIC_WEBHOOK_URL not configured`);
+      throw new Error("Webhook URL not configured");
+    }
     
-    console.log(`[trigger-sync-by-name] Calling proxy at: ${baseUrl}/api/proxy-trigger-sync`);
+    console.log(`[trigger-sync-by-name] Calling webhook at: ${webhookUrl}/api/sync/${jobData.app_name}`);
     
     const webhookResponse = await fetch(
-      `${baseUrl}/api/proxy-trigger-sync`,
+      `${webhookUrl}/api/sync/${jobData.app_name}`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_WEBHOOK_TOKEN || "test-token-12345"}`,
+          "ngrok-skip-browser-warning": "true",
+          "User-Agent": "PowerShell-Script/1.0",
         },
         body: JSON.stringify({
           job_id: jobData.job_id,
