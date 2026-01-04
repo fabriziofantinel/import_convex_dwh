@@ -86,9 +86,6 @@ export default function SchedulingPage() {
               alert("Schedulazione salvata nell'app, ma errore nell'aggiornamento del cron job di Vercel. Potrebbe essere necessario un deployment manuale.");
             }
           }
-            console.error('Failed to update Vercel cron:', result.error);
-            alert("Schedulazione salvata nell'app, ma errore nell'aggiornamento del cron job di Vercel. Potrebbe essere necessario un deployment manuale.");
-          }
         } catch (cronError) {
           console.error('Error updating Vercel cron:', cronError);
           alert("Schedulazione salvata nell'app, ma errore nell'aggiornamento del cron job di Vercel. Potrebbe essere necessario un deployment manuale.");
