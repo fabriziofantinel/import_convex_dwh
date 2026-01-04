@@ -30,29 +30,20 @@ export function useTriggerSync() {
       // Step 1: Call Convex mutation to create job
       const jobData = await prepareSyncJob(params);
 
-      // Step 2: Call webhook server to start sync
-      const webhookUrl = process.env.NEXT_PUBLIC_WEBHOOK_URL;
-      if (!webhookUrl) {
-        throw new Error("NEXT_PUBLIC_WEBHOOK_URL not configured");
-      }
-
-      const webhookResponse = await fetch(
-        `${webhookUrl}/api/sync/${jobData.app_name}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_WEBHOOK_TOKEN || "test-token-12345"}`,
-          },
-          body: JSON.stringify({
-            job_id: jobData.job_id,
-            app_name: jobData.app_name,
-            deploy_key: jobData.deploy_key,
-            tables: jobData.tables,
-            table_mapping: jobData.table_mapping,
-          }),
-        }
-      );
+      // Step 2: Call webhook server via proxy to bypass ngrok browser warning
+      const webhookResponse = await fetch("/api/proxy-trigger-sync", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          job_id: jobData.job_id,
+          app_name: jobData.app_name,
+          deploy_key: jobData.deploy_key,
+          tables: jobData.tables,
+          table_mapping: jobData.table_mapping,
+        }),
+      });
 
       if (!webhookResponse.ok) {
         const errorText = await webhookResponse.text();
