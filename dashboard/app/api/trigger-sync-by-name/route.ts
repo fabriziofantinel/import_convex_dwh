@@ -34,14 +34,17 @@ export async function POST(request: NextRequest) {
       triggered_by: "manual",
     });
 
-    // Step 3: Trigger webhook via proxy
+    // Step 3: Trigger webhook via proxy (same as Sync Now button)
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000";
+    
     const webhookResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_WEBHOOK_URL}/trigger-sync`,
+      `${baseUrl}/api/proxy-trigger-sync`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_WEBHOOK_TOKEN}`,
         },
         body: JSON.stringify({
           job_id: jobData.job_id,
