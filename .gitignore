@@ -95,3 +95,7 @@ convex_data_*/
 # SQL Server
 *.mdf
 *.ldf
+
+# Cleanup files
+CLEANUP_FILES.txt
+cleanup_project.bat
