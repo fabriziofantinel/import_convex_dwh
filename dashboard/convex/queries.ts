@@ -258,6 +258,10 @@ export const getAllSyncJobs = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? 50;
     
+    // Take more records to ensure we have enough after filtering
+    // If date range is specified, take up to 500 records to filter from
+    const takeLimit = (args.from_date || args.to_date) ? 500 : limit * 2;
+    
     // Get jobs based on whether app filter is provided
     let jobs;
     if (args.app_id !== undefined) {
@@ -265,12 +269,12 @@ export const getAllSyncJobs = query({
         .query("sync_jobs")
         .withIndex("by_app_and_started", (q) => q.eq("app_id", args.app_id!))
         .order("desc")
-        .take(limit * 2);
+        .take(takeLimit);
     } else {
       jobs = await ctx.db
         .query("sync_jobs")
         .order("desc")
-        .take(limit * 2);
+        .take(takeLimit);
     }
     
     // Apply date range filter if provided
