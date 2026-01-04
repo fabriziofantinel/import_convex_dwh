@@ -91,14 +91,11 @@ export function AppForm({
     setFetchError(null);
 
     try {
-      // Call webhook server via ngrok URL
-      const webhookUrl = process.env.NEXT_PUBLIC_WEBHOOK_URL || "http://localhost:5000";
-      const response = await fetch(`${webhookUrl}/api/fetch-tables`, {
+      // Call via proxy to bypass ngrok browser warning
+      const response = await fetch("/api/proxy-fetch-tables", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_WEBHOOK_TOKEN || "test-token-12345"}`,
-          "ngrok-skip-browser-warning": "true",
         },
         body: JSON.stringify({
           deploy_key: deployKey,
