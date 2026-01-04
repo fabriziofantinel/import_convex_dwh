@@ -43,8 +43,9 @@ export const triggerSync = action({
     });
 
     // Get webhook configuration from environment
-    const webhookUrl = process.env.WEBHOOK_URL;
-    const webhookToken = process.env.WEBHOOK_TOKEN;
+    // Use NEXT_PUBLIC_ prefixed variables which are available in Vercel
+    const webhookUrl = process.env.NEXT_PUBLIC_WEBHOOK_URL || process.env.WEBHOOK_URL;
+    const webhookToken = process.env.NEXT_PUBLIC_WEBHOOK_TOKEN || process.env.WEBHOOK_TOKEN;
 
     if (!webhookUrl || !webhookToken) {
       // Update job to failed
@@ -53,7 +54,7 @@ export const triggerSync = action({
         status: "failed",
         completed_at: Date.now(),
         error_message:
-          "Webhook configuration missing. Please set WEBHOOK_URL and WEBHOOK_TOKEN environment variables.",
+          "Webhook configuration missing. Please set NEXT_PUBLIC_WEBHOOK_URL and NEXT_PUBLIC_WEBHOOK_TOKEN environment variables.",
       });
 
       throw new Error("Webhook configuration missing");
@@ -168,10 +169,10 @@ export const fetchAvailableTables = action({
   },
   handler: async (ctx, args) => {
     try {
-      // Temporary hardcoded values for testing
-      // TODO: Move to environment variables in production
-      const webhookUrl = "http://localhost:5000";
-      const webhookToken = "test-token-12345";
+      // Get webhook configuration from environment
+      // Use NEXT_PUBLIC_ prefixed variables which are available in Vercel
+      const webhookUrl = process.env.NEXT_PUBLIC_WEBHOOK_URL || process.env.WEBHOOK_URL;
+      const webhookToken = process.env.NEXT_PUBLIC_WEBHOOK_TOKEN || process.env.WEBHOOK_TOKEN;
 
       if (!webhookUrl || !webhookToken) {
         throw new Error("Webhook configuration missing");
