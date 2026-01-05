@@ -415,6 +415,183 @@ export default function ServicesPage() {
             </div>
           </div>
         </div>
+
+        {/* Script Download Section */}
+        <div className="mt-6 bg-purple-50 border border-purple-200 rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-purple-900">
+              📜 Script trigger_sync.ps1
+            </h3>
+            <button
+              onClick={() => {
+                const scriptContent = `# Script PowerShell per triggerare sync - replica il tasto "Sync Now"
+# Uso: .\\trigger_sync.ps1 -AppName "nome_app"
+
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$AppName
+)
+
+$VERCEL_URL = "https://import-convex-dwh.vercel.app"
+
+Write-Host "=== Trigger Sync: $AppName ===" -ForegroundColor Cyan
+Write-Host ""
+
+Write-Host "Avvio sincronizzazione..." -ForegroundColor Yellow
+
+try {
+    $body = @{
+        app_name = $AppName
+    } | ConvertTo-Json
+
+    $response = Invoke-RestMethod -Uri "$VERCEL_URL/api/trigger-sync-by-name" -Method Post -Body $body -ContentType "application/json"
+    
+    Write-Host "[OK] Sincronizzazione avviata!" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Job ID: $($response.job_id)" -ForegroundColor White
+    Write-Host "App: $($response.app_name)" -ForegroundColor White
+    Write-Host ""
+    Write-Host "Monitora su: $VERCEL_URL/logs" -ForegroundColor Cyan
+    Write-Host ""
+}
+catch {
+    $errorMessage = $_.Exception.Message
+    if ($_.ErrorDetails.Message) {
+        $errorDetails = $_.ErrorDetails.Message | ConvertFrom-Json
+        $errorMessage = $errorDetails.error
+    }
+    Write-Host "ERRORE: $errorMessage" -ForegroundColor Red
+    exit 1
+}
+
+Write-Host "=== Completato ===" -ForegroundColor Green
+exit 0
+`;
+                const blob = new Blob([scriptContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'trigger_sync.ps1';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                toast.success("Download avviato!", "Script scaricato");
+              }}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download Script
+            </button>
+          </div>
+          
+          <p className="text-sm text-purple-800 mb-4">
+            Questo script PowerShell permette di avviare la sincronizzazione di un&apos;app da riga di comando o da Windows Task Scheduler.
+          </p>
+
+          {/* Script code */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                const code = `# Script PowerShell per triggerare sync - replica il tasto "Sync Now"
+# Uso: .\\trigger_sync.ps1 -AppName "nome_app"
+
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$AppName
+)
+
+$VERCEL_URL = "https://import-convex-dwh.vercel.app"
+
+Write-Host "=== Trigger Sync: $AppName ===" -ForegroundColor Cyan
+Write-Host ""
+
+Write-Host "Avvio sincronizzazione..." -ForegroundColor Yellow
+
+try {
+    $body = @{
+        app_name = $AppName
+    } | ConvertTo-Json
+
+    $response = Invoke-RestMethod -Uri "$VERCEL_URL/api/trigger-sync-by-name" -Method Post -Body $body -ContentType "application/json"
+    
+    Write-Host "[OK] Sincronizzazione avviata!" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Job ID: $($response.job_id)" -ForegroundColor White
+    Write-Host "App: $($response.app_name)" -ForegroundColor White
+    Write-Host ""
+    Write-Host "Monitora su: $VERCEL_URL/logs" -ForegroundColor Cyan
+    Write-Host ""
+}
+catch {
+    $errorMessage = $_.Exception.Message
+    if ($_.ErrorDetails.Message) {
+        $errorDetails = $_.ErrorDetails.Message | ConvertFrom-Json
+        $errorMessage = $errorDetails.error
+    }
+    Write-Host "ERRORE: $errorMessage" -ForegroundColor Red
+    exit 1
+}
+
+Write-Host "=== Completato ===" -ForegroundColor Green
+exit 0`;
+                navigator.clipboard.writeText(code);
+                toast.success("Copiato!", "Script copiato negli appunti");
+              }}
+              className="absolute top-2 right-2 px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs transition-colors"
+              title="Copia codice"
+            >
+              Copia
+            </button>
+            <pre className="bg-gray-900 text-gray-100 px-4 py-3 rounded-lg text-xs overflow-x-auto max-h-80 overflow-y-auto">
+{`# Script PowerShell per triggerare sync - replica il tasto "Sync Now"
+# Uso: .\\trigger_sync.ps1 -AppName "nome_app"
+
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$AppName
+)
+
+$VERCEL_URL = "https://import-convex-dwh.vercel.app"
+
+Write-Host "=== Trigger Sync: $AppName ===" -ForegroundColor Cyan
+Write-Host ""
+
+Write-Host "Avvio sincronizzazione..." -ForegroundColor Yellow
+
+try {
+    $body = @{
+        app_name = $AppName
+    } | ConvertTo-Json
+
+    $response = Invoke-RestMethod -Uri "$VERCEL_URL/api/trigger-sync-by-name" \\
+        -Method Post -Body $body -ContentType "application/json"
+    
+    Write-Host "[OK] Sincronizzazione avviata!" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Job ID: $($response.job_id)" -ForegroundColor White
+    Write-Host "App: $($response.app_name)" -ForegroundColor White
+    Write-Host ""
+    Write-Host "Monitora su: $VERCEL_URL/logs" -ForegroundColor Cyan
+    Write-Host ""
+}
+catch {
+    $errorMessage = $_.Exception.Message
+    if ($_.ErrorDetails.Message) {
+        $errorDetails = $_.ErrorDetails.Message | ConvertFrom-Json
+        $errorMessage = $errorDetails.error
+    }
+    Write-Host "ERRORE: $errorMessage" -ForegroundColor Red
+    exit 1
+}
+
+Write-Host "=== Completato ===" -ForegroundColor Green
+exit 0`}
+            </pre>
+          </div>
+        </div>
       </DashboardLayout>
     </ProtectedRoute>
   );
