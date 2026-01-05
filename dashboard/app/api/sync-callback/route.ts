@@ -8,8 +8,11 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    console.log('Sync callback received:', JSON.stringify(body, null, 2));
+
     // Validate required fields
     if (!body.job_id || !body.status || !body.completed_at) {
+      console.error('Missing required fields:', { job_id: body.job_id, status: body.status, completed_at: body.completed_at });
       return NextResponse.json(
         { error: "Missing required fields: job_id, status, completed_at" },
         { status: 400 }
@@ -18,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     // Call Convex action to update job
     await client.action(api.actions.syncCallback, {
-      job_id: body.job_id,
+      job_id: body.job_id as any, // Cast to any to handle ID type conversion
       status: body.status,
       completed_at: body.completed_at,
       duration_seconds: body.duration_seconds,
@@ -28,6 +31,7 @@ export async function POST(request: NextRequest) {
       log_content: body.log_content,
     });
 
+    console.log('Sync callback processed successfully for job:', body.job_id);
     return NextResponse.json({ success: true, message: "Sync job updated" });
   } catch (error) {
     console.error("Sync callback error:", error);
