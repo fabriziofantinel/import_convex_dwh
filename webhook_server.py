@@ -60,8 +60,8 @@ email_notifier = get_email_notifier(DASHBOARD_URL)
 # Initialize rate limiter
 rate_limiter = init_rate_limiter(RATE_LIMIT_REQUESTS_PER_MINUTE, RATE_LIMIT_BURST_SIZE)
 
-# Initialize audit logger
-audit_logger = init_audit_logger(CONVEX_WEBHOOK_URL)
+# Initialize audit logger (disable Convex sending to avoid 405 errors)
+audit_logger = init_audit_logger(None)
 
 
 def authenticate_request():
