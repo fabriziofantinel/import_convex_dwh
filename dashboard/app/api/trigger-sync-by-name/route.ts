@@ -7,13 +7,20 @@ const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export async function POST(request: NextRequest) {
   try {
-    const { app_name } = await request.json();
+    const { app_name, triggered_by = "cron" } = await request.json();
 
     if (!app_name) {
       return NextResponse.json(
         { error: "app_name is required" },
         { status: 400 }
       );
+    }
+
+    // Map "scheduled" to "cron" for Convex schema compatibility
+    // Valid values: "manual", "cron" (or "scheduled" which maps to "cron")
+    let triggerType: "manual" | "cron" = "cron";
+    if (triggered_by === "manual") {
+      triggerType = "manual";
     }
 
     console.log(`[trigger-sync-by-name] Looking for app: ${app_name}`);
@@ -38,7 +45,7 @@ export async function POST(request: NextRequest) {
     try {
       jobData = await convex.mutation(api.mutations.prepareSyncJob, {
         app_id: app._id as Id<"sync_apps">,
-        triggered_by: "manual",
+        triggered_by: triggerType,
       });
       console.log(`[trigger-sync-by-name] Job created: ${jobData.job_id}`);
     } catch (convexError) {

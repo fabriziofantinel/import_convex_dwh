@@ -18,7 +18,7 @@ if not exist .env (
 )
 
 REM Check if Flask is installed
-python -c "import flask" 2>nul
+"C:\Users\Fabrizio Fantinel\AppData\Local\Programs\Python\Python311\python.exe" -c "import flask" 2>nul
 if errorlevel 1 (
     echo ERROR: Flask not installed!
     echo.
@@ -33,6 +33,6 @@ echo Starting webhook server...
 echo Press Ctrl+C to stop
 echo.
 
-python webhook_server.py
+"C:\Users\Fabrizio Fantinel\AppData\Local\Programs\Python\Python311\python.exe" webhook_server.py
 
 pause

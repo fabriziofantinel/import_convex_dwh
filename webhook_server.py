@@ -234,6 +234,13 @@ def run_sync_async(job_id, app_name, deploy_key, tables, table_mapping):
         tables: List of tables to sync (or None for all)
         table_mapping: Dict of table name mappings (or None)
     """
+    # Write debug at the very start
+    try:
+        with open('logs/webhook_debug.log', 'a', encoding='utf-8') as f:
+            f.write(f"\n[{datetime.now()}] run_sync_async called for {app_name}, job_id={job_id}\n")
+    except Exception as e:
+        print(f"[DEBUG] Failed to write debug log: {e}")
+    
     started_at = datetime.now()
     
     # Log sync start
@@ -248,6 +255,17 @@ def run_sync_async(job_id, app_name, deploy_key, tables, table_mapping):
         
         # Build command
         cmd = [PYTHON_EXE, SYNC_SCRIPT_PATH, app_name]
+        print(f"[{app_name}] Command: {cmd}")
+        print(f"[{app_name}] Working directory: {os.path.dirname(os.path.abspath(__file__))}")
+        
+        # Write debug info before subprocess
+        with open('logs/webhook_debug.log', 'a', encoding='utf-8') as f:
+            f.write(f"\n{'='*60}\n")
+            f.write(f"[{datetime.now()}] Starting sync for {app_name}\n")
+            f.write(f"Command: {cmd}\n")
+            f.write(f"Working directory: {os.path.dirname(os.path.abspath(__file__))}\n")
+            f.write(f"PYTHON_EXE exists: {os.path.exists(PYTHON_EXE)}\n")
+            f.write(f"SYNC_SCRIPT_PATH exists: {os.path.exists(SYNC_SCRIPT_PATH)}\n")
         
         # Execute sync.py
         start_time = time.time()
@@ -266,6 +284,24 @@ def run_sync_async(job_id, app_name, deploy_key, tables, table_mapping):
         log_content = result.stdout
         if result.stderr:
             log_content += "\n\nSTDERR:\n" + result.stderr
+        
+        print(f"[{app_name}] Return code: {result.returncode}")
+        print(f"[{app_name}] STDOUT: {result.stdout[:500] if result.stdout else 'empty'}")
+        print(f"[{app_name}] STDERR: {result.stderr[:500] if result.stderr else 'empty'}")
+        
+        # Force flush to see output immediately
+        import sys
+        sys.stdout.flush()
+        
+        # Write debug info to file
+        with open('logs/webhook_debug.log', 'a', encoding='utf-8') as f:
+            f.write(f"\n{'='*60}\n")
+            f.write(f"[{datetime.now()}] Sync for {app_name}\n")
+            f.write(f"Command: {cmd}\n")
+            f.write(f"Return code: {result.returncode}\n")
+            f.write(f"STDOUT:\n{result.stdout}\n")
+            f.write(f"STDERR:\n{result.stderr}\n")
+            f.write(f"{'='*60}\n")
         
         # Parse output for statistics
         stats = parse_sync_output(result.stdout)
@@ -682,6 +718,13 @@ def trigger_sync(app_name):
     with running_syncs_lock:
         running_syncs[app_name] = job_id
     
+    # Debug: write to file before starting thread
+    try:
+        with open('logs/webhook_debug.log', 'a', encoding='utf-8') as f:
+            f.write(f"\n[{datetime.now()}] About to start thread for {app_name}, job_id={job_id}\n")
+    except Exception as e:
+        print(f"[DEBUG] Failed to write debug log: {e}")
+    
     # Start sync in background thread
     thread = threading.Thread(
         target=run_sync_async,
@@ -689,6 +732,13 @@ def trigger_sync(app_name):
         daemon=True
     )
     thread.start()
+    
+    # Debug: write to file after starting thread
+    try:
+        with open('logs/webhook_debug.log', 'a', encoding='utf-8') as f:
+            f.write(f"[{datetime.now()}] Thread started for {app_name}\n")
+    except Exception as e:
+        print(f"[DEBUG] Failed to write debug log: {e}")
     
     return jsonify({
         'success': True,

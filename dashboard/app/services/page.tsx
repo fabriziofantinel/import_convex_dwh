@@ -341,6 +341,80 @@ export default function ServicesPage() {
             <li>Redeploy the dashboard on Vercel</li>
           </ol>
         </div>
+
+        {/* Task Scheduler Instructions */}
+        <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-green-900 mb-3">
+            📅 Schedulare Sync Automatici (Windows Task Scheduler)
+          </h3>
+          <p className="text-sm text-green-800 mb-4">
+            Usa lo script PowerShell <code className="bg-green-100 px-1 py-0.5 rounded">trigger_sync.ps1</code> per schedulare sync automatici delle app.
+          </p>
+          
+          <div className="space-y-4">
+            {/* Manual test */}
+            <div>
+              <h4 className="font-medium text-green-900 mb-2">1. Test manuale</h4>
+              <code className="block bg-gray-900 text-gray-100 px-3 py-2 rounded text-sm">
+                .\trigger_sync.ps1 -AppName &quot;nome_app&quot;
+              </code>
+            </div>
+
+            {/* Create scheduled task */}
+            <div>
+              <h4 className="font-medium text-green-900 mb-2">2. Creare Task Schedulato</h4>
+              <ol className="list-decimal list-inside space-y-1 text-sm text-green-800 ml-2">
+                <li>Apri <strong>Task Scheduler</strong> (taskschd.msc)</li>
+                <li>Click <strong>Create Basic Task</strong></li>
+                <li>Nome: <code className="bg-green-100 px-1 py-0.5 rounded">Sync [NomeApp]</code></li>
+                <li>Trigger: <strong>Daily</strong> o <strong>Weekly</strong> all&apos;orario desiderato</li>
+                <li>Action: <strong>Start a program</strong></li>
+              </ol>
+            </div>
+
+            {/* Program settings */}
+            <div>
+              <h4 className="font-medium text-green-900 mb-2">3. Configurazione Programma</h4>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="text-green-800 font-medium">Program/script:</span>
+                  <code className="block bg-gray-900 text-gray-100 px-3 py-2 rounded text-sm mt-1">
+                    powershell.exe
+                  </code>
+                </div>
+                <div>
+                  <span className="text-green-800 font-medium">Arguments:</span>
+                  <code className="block bg-gray-900 text-gray-100 px-3 py-2 rounded text-sm mt-1">
+                    -ExecutionPolicy Bypass -File &quot;C:\path\to\trigger_sync.ps1&quot; -AppName &quot;nome_app&quot;
+                  </code>
+                </div>
+                <div>
+                  <span className="text-green-800 font-medium">Start in:</span>
+                  <code className="block bg-gray-900 text-gray-100 px-3 py-2 rounded text-sm mt-1">
+                    C:\path\to\project
+                  </code>
+                </div>
+              </div>
+            </div>
+
+            {/* Important notes */}
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+              <p className="text-sm text-yellow-800">
+                <strong>⚠️ Importante:</strong> Assicurati che il webhook server e ngrok siano in esecuzione quando il task viene eseguito. 
+                Puoi creare task separati per avviarli all&apos;avvio del sistema.
+              </p>
+            </div>
+
+            {/* List apps */}
+            <div>
+              <h4 className="font-medium text-green-900 mb-2">📋 Lista App Disponibili</h4>
+              <p className="text-sm text-green-800 mb-2">Per vedere le app configurate:</p>
+              <code className="block bg-gray-900 text-gray-100 px-3 py-2 rounded text-sm">
+                .\list_apps.ps1
+              </code>
+            </div>
+          </div>
+        </div>
       </DashboardLayout>
     </ProtectedRoute>
   );
