@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "convex/react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -13,6 +13,24 @@ import { api } from "@/convex/_generated/api";
  * Display all sync jobs from all applications with filters
  */
 
+// Helper to calculate date range - returns stable values
+function calculateDateRange(days: string): { from_date: number | undefined; to_date: number | undefined } {
+  if (days === "all") {
+    return { from_date: undefined, to_date: undefined };
+  }
+  
+  const daysNum = parseInt(days);
+  const now = Date.now();
+  // Round to start of current hour to avoid constant recalculation
+  const roundedNow = Math.floor(now / (60 * 60 * 1000)) * (60 * 60 * 1000);
+  const from = roundedNow - (daysNum * 24 * 60 * 60 * 1000);
+  
+  return {
+    from_date: from,
+    to_date: roundedNow + (60 * 60 * 1000) // Add 1 hour buffer
+  };
+}
+
 export default function AllLogsPage() {
   const apps = useQuery(api.queries.listSyncApps);
   
@@ -21,22 +39,17 @@ export default function AllLogsPage() {
   const [dateRange, setDateRange] = useState<string>("7"); // days
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [isLogViewerOpen, setIsLogViewerOpen] = useState(false);
+  
+  // Store calculated dates in state to keep them stable
+  const [dateFilter, setDateFilter] = useState(() => calculateDateRange("7"));
 
-  // Calculate date range for query
-  const { from_date, to_date } = useMemo(() => {
-    if (dateRange === "all") {
-      return { from_date: undefined, to_date: undefined };
-    }
-    
-    const days = parseInt(dateRange);
-    const now = Date.now();
-    const from = now - (days * 24 * 60 * 60 * 1000);
-    
-    return {
-      from_date: from,
-      to_date: now
-    };
-  }, [dateRange]);
+  // Update date filter when dateRange changes
+  const handleDateRangeChange = useCallback((newRange: string) => {
+    setDateRange(newRange);
+    setDateFilter(calculateDateRange(newRange));
+  }, []);
+
+  const { from_date, to_date } = dateFilter;
 
   // Query with filters
   const allJobs = useQuery(api.queries.getAllSyncJobs, { 
@@ -128,7 +141,7 @@ export default function AllLogsPage() {
               </label>
               <select
                 value={dateRange}
-                onChange={(e) => setDateRange(e.target.value)}
+                onChange={(e) => handleDateRangeChange(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="1">Last 24 hours</option>
