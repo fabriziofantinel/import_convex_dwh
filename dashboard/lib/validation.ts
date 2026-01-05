@@ -114,93 +114,7 @@ export function validateDeployKey(deployKey: string): ValidationError[] {
   return errors;
 }
 
-/**
- * Validate cron schedule format
- */
-export function validateCronSchedule(schedule: string): ValidationError[] {
-  const errors: ValidationError[] = [];
-  
-  if (!schedule.trim()) {
-    return errors; // Empty is allowed if cron is disabled
-  }
-  
-  // Basic cron validation: 5 parts separated by spaces
-  const parts = schedule.trim().split(/\s+/);
-  if (parts.length !== 5) {
-    errors.push({
-      field: 'cron_schedule',
-      message: 'Cron schedule must have 5 parts: minute hour day month weekday'
-    });
-    return errors;
-  }
-  
-  // Validate each part
-  const validators = [
-    { name: 'minute', min: 0, max: 59 },
-    { name: 'hour', min: 0, max: 23 },
-    { name: 'day', min: 1, max: 31 },
-    { name: 'month', min: 1, max: 12 },
-    { name: 'weekday', min: 0, max: 7 }, // 0 and 7 are both Sunday
-  ];
-  
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i];
-    const validator = validators[i];
-    
-    if (!validateCronPart(part, validator.min, validator.max)) {
-      errors.push({
-        field: 'cron_schedule',
-        message: `Invalid ${validator.name} value: ${part}`
-      });
-    }
-  }
-  
-  return errors;
-}
 
-/**
- * Validate individual cron part
- */
-function validateCronPart(part: string, min: number, max: number): boolean {
-  // Allow * (any value)
-  if (part === '*') return true;
-  
-  // Allow ranges (e.g., 1-5)
-  if (part.includes('-')) {
-    const [start, end] = part.split('-');
-    const startNum = parseInt(start);
-    const endNum = parseInt(end);
-    return !isNaN(startNum) && !isNaN(endNum) && 
-           startNum >= min && startNum <= max &&
-           endNum >= min && endNum <= max &&
-           startNum <= endNum;
-  }
-  
-  // Allow lists (e.g., 1,3,5)
-  if (part.includes(',')) {
-    const values = part.split(',');
-    return values.every(val => {
-      const num = parseInt(val);
-      return !isNaN(num) && num >= min && num <= max;
-    });
-  }
-  
-  // Allow step values (e.g., */5, 0-23/2)
-  if (part.includes('/')) {
-    const [range, step] = part.split('/');
-    const stepNum = parseInt(step);
-    if (isNaN(stepNum) || stepNum <= 0) return false;
-    
-    if (range === '*') return true;
-    
-    // Validate range part
-    return validateCronPart(range, min, max);
-  }
-  
-  // Single number
-  const num = parseInt(part);
-  return !isNaN(num) && num >= min && num <= max;
-}
 
 /**
  * Validate hostname/IP address
@@ -343,8 +257,6 @@ export function validateSyncAppForm(data: {
   description?: string;
   deploy_key: string;
   tables: string[];
-  cron_schedule?: string;
-  cron_enabled: boolean;
 }): ValidationResult {
   const errors: ValidationError[] = [];
   
@@ -354,18 +266,12 @@ export function validateSyncAppForm(data: {
     description: data.description ? sanitizeText(data.description) : undefined,
     deploy_key: sanitizeText(data.deploy_key),
     tables: data.tables.map(t => sanitizeText(t)),
-    cron_schedule: data.cron_schedule ? sanitizeText(data.cron_schedule) : undefined,
-    cron_enabled: data.cron_enabled,
   };
   
   // Validate each field
   errors.push(...validateAppName(sanitizedData.name));
   errors.push(...validateDeployKey(sanitizedData.deploy_key));
   errors.push(...validateTableNames(sanitizedData.tables));
-  
-  if (sanitizedData.cron_enabled && sanitizedData.cron_schedule) {
-    errors.push(...validateCronSchedule(sanitizedData.cron_schedule));
-  }
   
   return {
     isValid: errors.length === 0,

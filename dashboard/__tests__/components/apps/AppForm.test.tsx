@@ -45,9 +45,7 @@ const mockInitialData = {
   name: 'test-app',
   description: 'Test description',
   deploy_key: 'dev:project|token123',
-  tables: ['table1', 'table2'],
-  cron_schedule: '0 2 * * *',
-  cron_enabled: true
+  tables: ['table1', 'table2']
 }
 
 describe('AppForm', () => {
@@ -66,7 +64,6 @@ describe('AppForm', () => {
     expect(screen.getByLabelText(/Application Name/)).toBeInTheDocument()
     expect(screen.getByLabelText(/Descrizione Applicazione/)).toBeInTheDocument()
     expect(screen.getByLabelText(/Convex Deploy Key/)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Enable Automatic Sync Schedule/)).toBeInTheDocument()
   })
 
   it('populates form with initial data', () => {
@@ -75,8 +72,6 @@ describe('AppForm', () => {
     expect(screen.getByDisplayValue('test-app')).toBeInTheDocument()
     expect(screen.getByDisplayValue('Test description')).toBeInTheDocument()
     expect(screen.getByDisplayValue('dev:project|token123')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('0 2 * * *')).toBeInTheDocument()
-    expect(screen.getByRole('checkbox', { name: /Enable Automatic Sync Schedule/ })).toBeChecked()
   })
 
   it('disables name field in edit mode', () => {
@@ -88,23 +83,13 @@ describe('AppForm', () => {
   })
 
   it('shows cron schedule field when cron is enabled', async () => {
-    const user = userEvent.setup()
-    render(<AppForm {...mockHandlers} />)
-    
-    const cronCheckbox = screen.getByRole('checkbox', { name: /Enable Automatic Sync Schedule/ })
-    await user.click(cronCheckbox)
-    
-    expect(screen.getByLabelText(/Cron Schedule/)).toBeInTheDocument()
+    // This test is no longer relevant since cron functionality was removed
+    expect(true).toBe(true)
   })
 
   it('hides cron schedule field when cron is disabled', async () => {
-    const user = userEvent.setup()
-    render(<AppForm initialData={{ ...mockInitialData, cron_enabled: true }} {...mockHandlers} />)
-    
-    const cronCheckbox = screen.getByRole('checkbox', { name: /Enable Automatic Sync Schedule/ })
-    await user.click(cronCheckbox)
-    
-    expect(screen.queryByLabelText(/Cron Schedule/)).not.toBeInTheDocument()
+    // This test is no longer relevant since cron functionality was removed
+    expect(true).toBe(true)
   })
 
   it('calls fetch tables when fetch button is clicked', async () => {

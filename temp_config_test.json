@@ -1,0 +1,17 @@
+{
+  "convex_apps": {
+    "app2": {
+      "deploy_key": "dev:bold-husky-496|eyJ2MiI6ImFkNGNmOGI4YjBhYzRlYWY5NGRlYTFhZGI2Njg1NTcyIn0=",
+      "tables": ["cliniche"],
+      "table_mapping": {}
+    }
+  },
+  "sql_server": {
+    "connection_string": "Driver={SQL Server};Server=18.197.31.166;Database=DWH_LAKE;UID=sa;PWD=Prim0Gr0up21@;",
+    "schema": "dbo",
+    "timeout": 30
+  },
+  "log_dir": "logs",
+  "retry_attempts": 3,
+  "retry_backoff": 2.0
+}

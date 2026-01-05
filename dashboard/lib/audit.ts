@@ -166,8 +166,6 @@ export class AuditLogger {
       {
         app_name: appData.name,
         tables_count: appData.tables?.length || 0,
-        cron_enabled: appData.cron_enabled,
-        cron_schedule: appData.cron_schedule,
       },
       {
         userEmail,

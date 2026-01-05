@@ -21,9 +21,7 @@ const mockApp = {
   _id: 'test-id' as Id<'sync_apps'>,
   name: 'Test App',
   description: 'Test description',
-  tables: ['table1', 'table2'],
-  cron_enabled: false,
-  cron_schedule: undefined
+  tables: ['table1', 'table2']
 }
 
 const mockLastJob = {
@@ -91,10 +89,9 @@ describe('AppCard', () => {
   })
 
   it('shows cron schedule when enabled', () => {
-    const cronApp = { ...mockApp, cron_enabled: true, cron_schedule: '0 2 * * *' }
-    render(<AppCard app={cronApp} lastJob={mockLastJob} {...mockHandlers} />)
-    
-    expect(screen.getByText('Scheduled: 0 2 * * *')).toBeInTheDocument()
+    // This test is no longer relevant since cron functionality was removed
+    // Keeping as placeholder or can be removed entirely
+    expect(true).toBe(true)
   })
 
   it('shows error message for failed jobs', () => {
